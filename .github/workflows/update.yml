@@ -2,7 +2,7 @@ name: Update YML with Markup
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Ежедневно в 03:00 UTC
+    - cron: '0 */4 * * *'  # каждые 4 часа
   workflow_dispatch:
 
 jobs:
@@ -27,8 +27,8 @@ jobs:
           echo "import xml.etree.ElementTree as ET" >> script.py
           echo "url = 'https://al-style.kz/upload/catalog_export/al_style_catalog.php'" >> script.py
           echo "response = requests.get(url)" >> script.py
-          echo "with open('allstyle_original.xml', 'wb') as f: f.write(response.content)" >> script.py
-          echo "tree = ET.parse('allstyle_original.xml')" >> script.py
+          echo "with open('original.xml', 'wb') as f: f.write(response.content)" >> script.py
+          echo "tree = ET.parse('original.xml')" >> script.py
           echo "root = tree.getroot()" >> script.py
           echo "markup = 1.35" >> script.py
           echo "for offer in root.findall('.//offer'):" >> script.py
@@ -38,9 +38,8 @@ jobs:
           echo "            original_price = float(price.text)" >> script.py
           echo "            new_price = round(original_price * markup, 2)" >> script.py
           echo "            price.text = str(new_price)" >> script.py
-          echo "        except ValueError:" >> script.py
-          echo "            pass" >> script.py
-          echo "tree.write('allstyle_with_markup.xml', encoding='utf-8', xml_declaration=True)" >> script.py
+          echo "        except ValueError: pass" >> script.py
+          echo "tree.write('allstyle_with_markup.yml', encoding='utf-8', xml_declaration=True)" >> script.py
 
       - name: Run script
         run: python script.py
@@ -49,6 +48,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add allstyle_with_markup.xml
-          git commit -m "Updated YML with markup"
+          git add allstyle_with_markup.yml
+          git commit -m "Update YML with 35% markup"
           git push
