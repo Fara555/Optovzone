@@ -1,0 +1,57 @@
+name: Update YML with Markup
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Ежедневно в 3:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Download and process YML
+        run: |
+          import requests
+          import xml.etree.ElementTree as ET
+
+          url = "https://al-style.kz/upload/catalog_export/al_style_catalog.php"
+          response = requests.get(url)
+          with open("allstyle_original.xml", "wb") as f:
+              f.write(response.content)
+
+          tree = ET.parse("allstyle_original.xml")
+          root = tree.getroot()
+
+          markup = 1.35  # 35% наценка
+
+          for offer in root.findall(".//offer"):
+              price = offer.find("price")
+              if price is not None:
+                  try:
+                      original_price = float(price.text)
+                      new_price = round(original_price * markup, 2)
+                      price.text = str(new_price)
+                  except ValueError:
+                      pass
+
+          tree.write("allstyle_with_markup.xml", encoding="utf-8", xml_declaration=True)
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add allstyle_with_markup.xml
+          git commit -m "Update YML with 35% markup"
+          git push
