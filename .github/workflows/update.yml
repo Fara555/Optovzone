@@ -39,7 +39,7 @@ jobs:
           echo "            original_price = float(price.text)" >> script.py
           echo "            new_price = round(original_price * markup, 2)" >> script.py
           echo "            price.text = str(new_price)" >> script.py
-          echo "        except ValueError: pass" >> script.py
+          echo "        except: price.text = '1.00'" >> script.py
           echo "    quantity = offer.find('quantity')" >> script.py
           echo "    if quantity is not None:" >> script.py
           echo "        try:" >> script.py
@@ -50,6 +50,10 @@ jobs:
           echo "        except:" >> script.py
           echo "            quantity.text = '0'" >> script.py
           echo "            invalid_ids.append(offer.attrib.get('id'))" >> script.py
+          echo "    else:" >> script.py
+          echo "        new_quantity = ET.SubElement(offer, 'quantity')" >> script.py
+          echo "        new_quantity.text = '0'" >> script.py
+          echo "        invalid_ids.append(offer.attrib.get('id'))" >> script.py
           echo "tree.write('allstyle_with_markup.yml', encoding='utf-8', xml_declaration=True)" >> script.py
           echo "with open('invalid_items.txt', 'w') as f:" >> script.py
           echo "    f.write('\\n'.join(invalid_ids))" >> script.py
@@ -62,5 +66,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add allstyle_with_markup.yml invalid_items.txt
-          git commit -m "Update YML with 35% markup and fix quantity issues"
+          git commit -m "Update YML with 35% markup and quantity fixes (with fallback)"
           git push
